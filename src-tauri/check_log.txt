@@ -1,0 +1,48 @@
+    Checking local-whisper-flow v0.1.0 (T:\Dev\personal\_myProductionGithub\whisper-instrucctions\local-whisper-flow\src-tauri)
+error[E0432]: unresolved import `enigo::KeyboardControllable`
+ --> src\lib.rs:8:25
+  |
+8 | use enigo::{Enigo, Key, KeyboardControllable, Settings, Direction};
+  |                         ^^^^^^^^^^^^^^^^^^^^ no `KeyboardControllable` in the root
+
+warning: unused imports: `App`, `Emitter`, and `Listener`
+ --> src\lib.rs:3:13
+  |
+3 | use tauri::{App, Manager, Listener, Emitter};
+  |             ^^^           ^^^^^^^^  ^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused imports: `Code` and `Modifiers`
+ --> src\lib.rs:6:70
+  |
+6 | use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState, Code, Modifiers};
+  |                                                                      ^^^^  ^^^^^^^^^
+
+warning: unused imports: `Direction` and `Key`
+ --> src\lib.rs:8:20
+  |
+8 | use enigo::{Enigo, Key, KeyboardControllable, Settings, Direction};
+  |                    ^^^                                  ^^^^^^^^^
+
+error[E0599]: no method named `text` found for struct `Enigo` in the current scope
+   --> src\lib.rs:76:63
+    |
+ 76 | ...                   let _ = enigo.text(s);
+    |                                     ^^^^ method not found in `Enigo`
+    |
+   ::: C:\Users\ariel\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\enigo-0.6.1\src\lib.rs:235:8
+    |
+235 |     fn text(&mut self, text: &str) -> InputResult<()> {
+    |        ---- the method is available for `Enigo` here
+    |
+    = help: items from traits can only be used if the trait is in scope
+help: trait `Keyboard` which provides `text` is implemented but not in scope; perhaps you want to import it
+    |
+  1 + use enigo::Keyboard;
+    |
+
+Some errors have detailed explanations: E0432, E0599.
+For more information about an error, try `rustc --explain E0432`.
+warning: `local-whisper-flow` (lib) generated 3 warnings
+error: could not compile `local-whisper-flow` (lib) due to 2 previous errors; 3 warnings emitted
