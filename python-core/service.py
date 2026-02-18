@@ -5,6 +5,7 @@ import sounddevice as sd
 import numpy as np
 from faster_whisper import WhisperModel
 import queue
+import argparse
 
 # Constants
 SAMPLE_RATE = 16000
@@ -14,6 +15,9 @@ CHANNELS = 1
 recording = False
 audio_queue = queue.Queue()
 model = None
+g_model_size = "base"
+g_device = "cpu"
+g_compute_type = "int8"
 
 def load_model():
     global model
@@ -22,7 +26,16 @@ def load_model():
     print(json.dumps({"status": "loading_model"}))
     sys.stdout.flush()
     # Use 'tiny' or 'base' for speed during dev, 'medium' or 'large-v3' for prod/quality
-    model = WhisperModel("base", device="cpu", compute_type="int8") 
+    try:
+        model = WhisperModel(g_model_size, device=g_device, compute_type=g_compute_type)
+    except ValueError as e:
+        if "float16" in str(e) and g_device == "cpu":
+            print(json.dumps({"status": "error", "message": "float16 not supported on CPU. Falling back to int8."}), file=sys.stderr)
+            sys.stderr.flush()
+            model = WhisperModel(g_model_size, device=g_device, compute_type="int8")
+        else:
+            raise e
+            
     print(json.dumps({"status": "ready"}))
     sys.stdout.flush()
 
@@ -75,7 +88,18 @@ def transcribe_audio():
     sys.stdout.flush()
 
 def main():
-    global recording
+    global recording, g_model_size, g_device, g_compute_type
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model", default="base", help="Model size")
+    parser.add_argument("--device", default="cpu", help="Device (cpu, cuda)")
+    args = parser.parse_args()
+    
+    g_model_size = args.model
+    g_device = args.device
+    
+    print(f"Starting with model={g_model_size}, device={g_device}")
+    sys.stdout.flush()
     
     # Preload model in a separate thread to not block initial handshake if any
     threading.Thread(target=load_model, daemon=True).start()
