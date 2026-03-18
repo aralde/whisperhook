@@ -1,6 +1,7 @@
 {
-  "name": "local-whisper-flow",
+  "name": "whisper-hook",
   "private": true,
+  "license": "MIT",
   "version": "0.1.0",
   "type": "module",
   "scripts": {

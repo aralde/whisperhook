@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "local-whisper-flow",
+  "productName": "WhisperHook",
   "version": "0.1.0",
-  "identifier": "com.ariel.local-whisper-flow",
+  "identifier": "com.ariel.whisperhook",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "local-whisper-flow",
+        "title": "WhisperHook",
         "width": 250,
         "height": 250,
         "decorations": false,

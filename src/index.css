@@ -38,11 +38,28 @@
     animation: breathing-red 1.2s infinite ease-in-out;
   }
 
+  @keyframes splashPulse {
+    0%   { transform: scale(0.95); opacity: 0.6; }
+    50%  { transform: scale(1.12); opacity: 1; }
+    100% { transform: scale(0.95); opacity: 0.6; }
+  }
+
   html, body, #root {
-    background-color: transparent !important;
     height: 100vh;
     width: 100vw;
     overflow: hidden;
     margin: 0;
     padding: 0;
+  }
+
+  /* Only the main overlay window is transparent */
+  body.window-main,
+  body.window-main #root {
+    background-color: transparent !important;
+  }
+
+  /* Settings window gets a solid dark background */
+  body.window-settings,
+  body.window-settings #root {
+    background-color: #0f1117;
   }
