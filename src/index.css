@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+@source "./App.tsx";
+@source "./main.tsx";
+@source "./components/**/*.tsx";
+
   /* Custom Avatar Styles */
   .avatar-glow {
     box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);

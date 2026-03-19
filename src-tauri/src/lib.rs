@@ -1,14 +1,25 @@
 mod state;
 use state::AppState;
-use tauri::{App, Manager, Listener, Emitter};
+use tauri::{Manager, Emitter};
 use tauri_plugin_shell::ShellExt;
 use tauri_plugin_shell::process::CommandEvent;
-use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState, Code, Modifiers};
+use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
 use std::sync::Mutex;
 use enigo::{Enigo, Keyboard, Settings};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
+
+fn kill_sidecar_process(app: &tauri::AppHandle) {
+    let state = app.state::<AppState>();
+    let mut sidecar = state.sidecar_process.lock().unwrap();
+    
+    if let Some(mut child) = sidecar.take() {
+        let _ = child.write(b"exit\n");
+        std::thread::sleep(std::time::Duration::from_millis(100));
+        let _ = child.kill();
+    }
+}
 
 
 #[tauri::command]
@@ -95,44 +106,81 @@ fn spawn_sidecar(app: &tauri::AppHandle) {
     }
 
     tauri::async_runtime::spawn(async move {
-        let current_dir = std::env::current_dir().unwrap();
-        // In dev, we are likely in src-tauri, so go up one level
-        let project_root = if current_dir.ends_with("src-tauri") {
-            current_dir.parent().unwrap().to_path_buf()
+        let mut exe_dir = std::env::current_exe().unwrap();
+        exe_dir.pop();
+        
+        let _project_root = if exe_dir.to_string_lossy().contains("target\\debug") || exe_dir.to_string_lossy().contains("target/debug") {
+            exe_dir.parent().unwrap().parent().unwrap().parent().unwrap().to_path_buf()
         } else {
-            current_dir.clone()
+            exe_dir.clone()
         };
 
-        let script_path = project_root.join("python-core/service.py");
-        println!("Launching python script at: {:?}", script_path);
+        let resource_dir = app_handle.path().resource_dir().unwrap_or_else(|_| {
+            let mut exe_dir = std::env::current_exe().unwrap();
+            exe_dir.pop();
+            exe_dir
+        });
 
-        // Use venv Python if available (has all pip packages), else fall back to system python
-        let venv_python = project_root.join("python-core/venv/Scripts/python.exe");
-        let python_exe = if venv_python.exists() {
-            venv_python.to_str().unwrap().to_string()
-        } else {
-            "python".to_string()
-        };
-        println!("Using Python: {}", python_exe);
+        let engine_path = resource_dir.join("whisper-engine").join("whisper-engine.exe");
+
+        let engine_exe = engine_path;
+
+        println!("Launching whisper engine at: {:?}", engine_exe);
 
         let settings = load_settings(&app_handle);
         println!("Loading with settings: {:?}", settings);
 
-        let mut python_args = vec![
-            "-u".to_string(),
-            script_path.to_str().unwrap().to_string(),
+        let mut engine_args = vec![
             "--model".to_string(), settings.model.clone(),
             "--device".to_string(), settings.device.clone(),
         ];
         if !settings.language.is_empty() {
-            python_args.push("--language".to_string());
-            python_args.push(settings.language.clone());
+            engine_args.push("--language".to_string());
+            engine_args.push(settings.language.clone());
         }
 
-        let (mut rx, child) = app_handle.shell().command(&python_exe)
-            .args(python_args)
+        let is_dev = {
+            let mut d = std::env::current_exe().unwrap();
+            d.pop();
+            d.to_string_lossy().contains("target\\debug") || d.to_string_lossy().contains("target/debug")
+        };
+
+        let (exe_path, final_args) = if is_dev {
+            let mut d = std::env::current_exe().unwrap();
+            d.pop();
+            let root = d.parent().unwrap().parent().unwrap().parent().unwrap().to_path_buf();
+            let py = root.join("python-core/venv/Scripts/python.exe");
+            let script = root.join("python-core/service.py");
+            let mut a = vec![script.to_str().unwrap().to_string()];
+            a.extend(engine_args);
+            (py, a)
+        } else {
+            (engine_exe, engine_args)
+        };
+
+        let exe_str = exe_path.to_str().unwrap();
+        let exe_folder = exe_path.parent().unwrap().to_path_buf();
+        
+        let model_cache_dir = if is_dev {
+            std::env::current_exe().unwrap().parent().unwrap().parent().unwrap().parent().unwrap()
+                .join("resources_whisper").join("whisper-models")
+        } else {
+            app_handle.path().app_local_data_dir().unwrap().join("whisper-models")
+        };
+        
+        std::fs::create_dir_all(&model_cache_dir).ok();
+        
+        let model_cache_str = model_cache_dir.to_str().unwrap().to_string();
+        println!("Model cache dir: {}", model_cache_str);
+        
+        let (mut rx, child) = app_handle.shell().command(exe_str)
+            .env("PYTHONUNBUFFERED", "1")
+            .env("HF_HOME", &model_cache_str)
+            .env("HF_HUB_DISABLE_SYMLINKS", "1")
+            .current_dir(exe_folder)
+            .args(final_args)
             .spawn()
-            .expect("Failed to spawn python sidecar");
+            .expect("Failed to spawn whisper engine");
         
         // Store child
         {
@@ -155,10 +203,13 @@ fn spawn_sidecar(app: &tauri::AppHandle) {
                                 println!("Injecting text: {}", s);
                                 let _ = app_handle.emit("app-status", "done");
                                 let _ = app_handle.emit("transcription", s);
-                                match Enigo::new(&Settings::default()) {
-                                    Ok(mut enigo) => { let _ = enigo.text(s); },
-                                    Err(e) => println!("Failed to init Enigo: {:?}", e),
-                                }
+                                let s_clone = s.to_string();
+                                tauri::async_runtime::spawn_blocking(move || {
+                                    match Enigo::new(&Settings::default()) {
+                                        Ok(mut enigo) => { let _ = enigo.text(&s_clone); },
+                                        Err(e) => println!("Failed to init Enigo: {:?}", e),
+                                    }
+                                });
                             } else {
                                 // If transcription is empty, just reset to ready so we don't hang
                                 let _ = app_handle.emit("app-status", "ready");
@@ -172,10 +223,12 @@ fn spawn_sidecar(app: &tauri::AppHandle) {
                                 let _ = app_handle.emit("partial-transcription", s);
                                 // Type the partial text immediately
                                 let text_to_type = format!("{} ", s);
-                                match Enigo::new(&Settings::default()) {
-                                    Ok(mut enigo) => { let _ = enigo.text(&text_to_type); },
-                                    Err(e) => println!("Failed to init Enigo: {:?}", e),
-                                }
+                                tauri::async_runtime::spawn_blocking(move || {
+                                    match Enigo::new(&Settings::default()) {
+                                        Ok(mut enigo) => { let _ = enigo.text(&text_to_type); },
+                                        Err(e) => println!("Failed to init Enigo: {:?}", e),
+                                    }
+                                });
                             }
                         }
                     } else if let Some(error) = json.get("error") {
@@ -224,7 +277,7 @@ fn stop_recording(app: tauri::AppHandle) {
     let state = app.state::<AppState>();
     let mut sidecar = state.sidecar_process.lock().unwrap();
     if let Some(child) = sidecar.as_mut() {
-        let _ = child.write(b"stop_record\n");
+        let _ = child.write(b"stop_record\r\n");
     }
 }
 
@@ -235,7 +288,7 @@ fn start_realtime(app: tauri::AppHandle) {
     let _ = app.emit("app-status", "realtime_active");
     let mut sidecar = state.sidecar_process.lock().unwrap();
     if let Some(child) = sidecar.as_mut() {
-        let _ = child.write(b"start_realtime\n");
+        let _ = child.write(b"start_realtime\r\n");
     }
 }
 
@@ -246,7 +299,7 @@ fn stop_realtime(app: tauri::AppHandle) {
     let _ = app.emit("app-status", "ready");
     let mut sidecar = state.sidecar_process.lock().unwrap();
     if let Some(child) = sidecar.as_mut() {
-        let _ = child.write(b"stop_realtime\n");
+        let _ = child.write(b"stop_realtime\r\n");
     }
 }
 
@@ -259,6 +312,11 @@ pub fn run() {
                 if window.label() == "settings" {
                     api.prevent_close();
                     let _ = window.hide();
+                } else if window.label() == "main" {
+                    api.prevent_close();
+                    let app = window.app_handle();
+                    kill_sidecar_process(&app);
+                    app.exit(0);
                 }
             }
         })
@@ -282,7 +340,7 @@ pub fn run() {
                          let _ = app.emit("app-status", "ready");
                          let mut sidecar = state.sidecar_process.lock().unwrap();
                          if let Some(child) = sidecar.as_mut() {
-                             let _ = child.write(b"stop_realtime\n");
+                             let _ = child.write(b"stop_realtime\r\n");
                          }
                      } else {
                          // Start listening
@@ -291,7 +349,7 @@ pub fn run() {
                          let _ = app.emit("app-status", "realtime_active");
                          let mut sidecar = state.sidecar_process.lock().unwrap();
                          if let Some(child) = sidecar.as_mut() {
-                             let _ = child.write(b"start_realtime\n");
+                             let _ = child.write(b"start_realtime\r\n");
                          }
                      }
                  } else {
@@ -299,7 +357,7 @@ pub fn run() {
                      let _ = app.emit("app-status", "recording");
                      let mut sidecar = state.sidecar_process.lock().unwrap();
                      if let Some(child) = sidecar.as_mut() {
-                         let _ = child.write(b"start_record\n");
+                         let _ = child.write(b"start_record\r\n");
                      }
                  }
              } else if event.state() == ShortcutState::Released {
@@ -310,7 +368,7 @@ pub fn run() {
                      let state = app.state::<AppState>();
                      let mut sidecar = state.sidecar_process.lock().unwrap();
                      if let Some(child) = sidecar.as_mut() {
-                         let _ = child.write(b"stop_record\n");
+                         let _ = child.write(b"stop_record\r\n");
                      }
                  }
                  // In realtime mode, release does nothing
@@ -334,6 +392,7 @@ pub fn run() {
                 .on_menu_event(|app: &tauri::AppHandle, event| {
                     match event.id.as_ref() {
                         "quit" => {
+                            kill_sidecar_process(app);
                             app.exit(0);
                         }
                         "settings" => {

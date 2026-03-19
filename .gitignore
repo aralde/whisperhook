@@ -3,23 +3,57 @@ logs
 *.log
 npm-debug.log*
 yarn-debug.log*
-yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Node.js
 node_modules
 dist
 dist-ssr
 *.local
+package-lock.json
 
-python-core/venv
-python-core/whisper
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+python-core/venv/
+python-core/dist/
+python-core/build/
+python-core/whisper/
+python-core/*.spec
+
+# Tauri/Rust
+src-tauri/target/
+
+# App-specific resources
+src-tauri/resources_whisper/whisper-models/
+!src-tauri/resources_whisper/whisper-models/.gitkeep
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
 .DS_Store
+Thumbs.db
 *.suo
 *.ntvs*
 *.njsproj

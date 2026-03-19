@@ -73,6 +73,10 @@ export const StatusOverlay = () => {
     };
 
     const getStatusMessage = (s: string) => {
+        if (s.startsWith('downloading:')) {
+            const model = s.split(':')[1];
+            return `Downloading Model (${model})...`;
+        }
         switch (s) {
             case 'loading_model': return "Loading Model...";
             case 'ready': return "Ready";
@@ -144,7 +148,7 @@ export const StatusOverlay = () => {
                     `}
                 >
                     {/* Loading spinner */}
-                    {status === 'loading_model' && (
+                    {(status === 'loading_model' || status.startsWith('downloading:')) && (
                         <svg data-tauri-drag-region xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-white animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
