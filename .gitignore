@@ -45,6 +45,10 @@ python-core/*.spec
 src-tauri/target/
 
 # App-specific resources
+resources_whisper/whisper-models/
+!resources_whisper/whisper-models/.gitkeep
+resources/whisper-models/
+!resources/whisper-models/.gitkeep
 src-tauri/resources_whisper/whisper-models/
 !src-tauri/resources_whisper/whisper-models/.gitkeep
 

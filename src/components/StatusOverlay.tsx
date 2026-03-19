@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
 import { getCurrentWindow } from '@tauri-apps/api/window';
@@ -11,6 +11,7 @@ export const StatusOverlay = () => {
     const [errorMessage, setErrorMessage] = useState("");
     const [partialText, setPartialText] = useState("");
     const [isHovered, setIsHovered] = useState(false);
+    const timeoutRef = useRef<number | null>(null);
 
     useEffect(() => {
         const unlistenStatus = listen('app-status', (event) => {
@@ -22,8 +23,8 @@ export const StatusOverlay = () => {
 
         const unlistenPartial = listen('partial-transcription', (event) => {
             setPartialText(event.payload as string);
-            // Clear partial text after 3s of silence
-            setTimeout(() => setPartialText(""), 3000);
+            if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
+            timeoutRef.current = window.setTimeout(() => setPartialText(""), 4000);
         });
 
         const unlistenError = listen('app-error', (event) => {
@@ -44,9 +45,11 @@ export const StatusOverlay = () => {
         }
     }, [status]);
 
-    const handleDoubleClick = async (e: React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
+    const handleAction = async (e?: React.MouseEvent) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
         if (status === 'realtime_active') {
             await invoke('stop_realtime');
         } else if (status === 'recording') {
@@ -132,7 +135,7 @@ export const StatusOverlay = () => {
                 <div
                     onContextMenu={(e) => e.preventDefault()}
                     onMouseDown={handleMouseDown}
-                    onDoubleClick={handleDoubleClick}
+                    onClick={handleAction}
                     onMouseEnter={() => setIsHovered(true)}
                     onMouseLeave={() => setIsHovered(false)}
                     className={`

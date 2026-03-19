@@ -302,7 +302,7 @@ def _transcribe_segment(audio_np: np.ndarray):
 
 
 def main():
-    global recording, realtime_active, g_model_size, g_device, g_compute_type
+    global recording, realtime_active, g_model_size, g_device, g_compute_type, g_language
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", default="base")

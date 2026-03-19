@@ -14,6 +14,20 @@
 
 ![WhisperHook Banner](public/banner.png)
 
+## 🎬 Demo
+
+![WhisperHook Demo](public/Antigravity_qSfP1yKdXp.gif)
+*WhisperHook in action: instant transcription across multiple applications.*
+
+## 📸 Screenshots
+
+<p align="center">
+  <img src="public/whisper-hook_hH6i8NPw81.png" alt="WhisperHook Interface" width="45%" style="margin: 2%;" />
+  <img src="public/whisper-hook_E3ZthU9OuP.png" alt="WhisperHook Settings" width="45%" style="margin: 2%;" />
+</p>
+
+*Left: The sleek, dark-themed floating indicator. Right: Transcription results in real-time.*
+
 ***
 
 Welcome to **WhisperHook**! WhisperHook is a blazing-fast, cross-platform dictation tool that uses local machine learning models directly on your device. Just press a hotkey from **any** application on your computer, speak, and watch your words magically appear on screen. 🚀
@@ -61,6 +75,7 @@ python -m venv venv
 
 # Windows
 .\venv\Scripts\activate
+
 # Linux/macOS
 source venv/bin/activate
 
@@ -85,11 +100,13 @@ npm run tauri dev
 To build a production-ready installer, you must bundle both the frontend and the Python sidecar.
 
 ### 1. Build the Frontend
+
 ```bash
 npm run build
 ```
 
 ### 2. Freeze the Python Sidecar
+
 WhisperHook expects the Python engine as a standalone executable. Use PyInstaller to build it:
 
 ```bash
@@ -100,6 +117,7 @@ pyinstaller whisper-engine.spec
 This generates the executable in `python-core/dist/whisper-engine`.
 
 ### 3. Build the Tauri Application
+
 Finally, build the installer (NSIS on Windows):
 
 ```bash
@@ -107,7 +125,7 @@ npm run tauri build
 ```
 The final installer will be located in `src-tauri/target/release/bundle/`.
 
----
+***
 
 ## 📄 License
 This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.

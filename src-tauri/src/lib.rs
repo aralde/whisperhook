@@ -103,6 +103,8 @@ fn spawn_sidecar(app: &tauri::AppHandle) {
             // We could also try child.kill() if available, but "exit" is safer for our python script
         }
         *sidecar = None;
+        // Wait a bit for the previous process to release resources (like Microphone)
+        std::thread::sleep(std::time::Duration::from_millis(300));
     }
 
     tauri::async_runtime::spawn(async move {
@@ -322,13 +324,22 @@ pub fn run() {
         })
         .plugin(tauri_plugin_global_shortcut::Builder::new().with_handler(move |app, _shortcut, event| {
              if event.state() == ShortcutState::Pressed {
+                 // Debounce rapid toggles (auto-repeat or noisy keys)
+                 let state = app.state::<AppState>();
+                 {
+                     let mut last_time = state.last_hotkey_time.lock().unwrap();
+                     if last_time.elapsed() < std::time::Duration::from_millis(200) {
+                         return;
+                     }
+                     *last_time = std::time::Instant::now();
+                 }
+
                  // Ensure top-most
                  if let Some(window) = app.get_webview_window("main") {
                       let _ = window.set_always_on_top(true);
                  }
 
                  let settings = load_settings(app);
-                 let state = app.state::<AppState>();
 
                  if settings.realtime {
                      // Toggle realtime on/off
@@ -448,7 +459,11 @@ pub fn run() {
             
             Ok(())
         })
-        .manage(AppState { sidecar_process: Mutex::new(None), realtime_active: Mutex::new(false) })
+        .manage(AppState { 
+            sidecar_process: Mutex::new(None), 
+            realtime_active: Mutex::new(false),
+            last_hotkey_time: Mutex::new(std::time::Instant::now()),
+        })
         .invoke_handler(tauri::generate_handler![greet, start_recording, stop_recording, get_settings, save_settings, start_realtime, stop_realtime])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
