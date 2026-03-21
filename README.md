@@ -68,17 +68,34 @@ npm run tauri dev
 
 ## 🧠 The AI Engine
 
-WhisperHook relies on two state-of-the-art AI models:
-1. **`faster-whisper`**: A deeply optimized reimplementation of OpenAI's Whisper, running up to 4x faster with less memory.
-2. **`silero-vad`**: Enterprise-grade Voice Activity Detection to precisely detect human speech and ignore background noise.
+WhisperHook achieves its extreme performance and privacy by combining two state-of-the-art AI technologies:
+
+1.  **`faster-whisper`**: A high-performance reimplementation of OpenAI's Whisper model using [CTranslate2](https://github.com/OpenNVIDIA/CTranslate2). It is up to **4x faster** than the original implementation and uses significantly less memory through techniques like 8-bit quantization and layer fusion.
+2.  **`silero-vad`**: A professional-grade Voice Activity Detector (VAD) that filters out non-human noise and silence, ensuring the transcription engine only processes actual speech.
+
+### 📊 Model Comparison & Requirements
+
+WhisperHook supports multiple model sizes, allowing you to balance speed and accuracy based on your hardware. Below are the typical requirements for `faster-whisper` (running in FP16/INT8 precision):
+
+| Model Size | Parameters | VRAM (GPU) | RAM (CPU) | Speed (Rel.) | Recommended Use Case |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Tiny** | 39M | ~390 MB | ~500 MB | ~32x | Real-time, low-end hardware. |
+| **Base** | 74M | ~500 MB | ~600 MB | ~16x | Fast transcription, good for English. |
+| **Small** | 244M | ~1.0 GB | ~1.2 GB | ~6x | Best balance of speed and accuracy. |
+| **Medium** | 769M | ~2.5 GB | ~3.0 GB | ~2x | High accuracy for complex audio. |
+| **Large-v3** | 1550M | ~3.1 GB | ~4.5 GB | 1x | State-of-the-art accuracy. |
+| **Turbo** | 809M | ~3.1 GB | ~4.0 GB | ~8x | SOTA accuracy with near-Small speed. |
+
+> [!NOTE]
+> Performance varies depending on your hardware (CPU vs. NVIDIA GPU with CUDA or MPS on Mac). For the best experience, an NVIDIA GPU with at least 4GB of VRAM is recommended for larger models.
 
 ---
 
 ## 🔒 Privacy & Offline Execution
 
-- **Zero cloud dependency**: All transcription happens locally.
-- **No data collection**: No audio or transcription data is ever transmitted.
-- **No internet required**: Works completely offline after installation.
+- **Zero cloud dependency**: All transcription happens locally via `faster-whisper`.
+- **No data collection**: No audio or transcription data is ever transmitted or stored outside your machine.
+- **No internet required**: Works 100% offline. Zero telemetry.
 
 ---
 
