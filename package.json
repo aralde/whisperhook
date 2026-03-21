@@ -8,7 +8,8 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "setup": "npm install && python -m venv python-core/venv && .\\python-core\\venv\\Scripts\\python -m pip install -r python-core/requirements.txt"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.1.18",

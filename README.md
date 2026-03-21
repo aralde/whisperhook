@@ -5,14 +5,38 @@
 
   **System-wide, privacy-focused voice typing powered by local AI.**
 
-  [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-  ![Windows](https://img.shields.io/badge/Windows-0078D6?style=flat&logo=windows&logoColor=white)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+  ![Windows](https://img.shields.io/badge/Windows-0078D6?style=flat-square&logo=windows&logoColor=white)
+  ![Local AI](https://img.shields.io/badge/100%25%20Local-Offline-green?style=flat-square&logo=gitpod&logoColor=white)
+  ![Tauri](https://img.shields.io/badge/Built%20with-Tauri-FFC131?style=flat-square&logo=tauri&logoColor=white)
   
   *Dictate anywhere. Instant transcription. Total privacy.*
 
 </div>
 
 ![WhisperHook Banner](public/banner.png)
+
+## 🚀 Quickstart (Local Development)
+
+Wanna start right away? If you are on Windows, just run:
+
+```bash
+.\setup.bat
+```
+
+Or use npm:
+
+```bash
+npm run setup
+```
+
+Then, launch the app:
+
+```bash
+npm run tauri dev
+```
+
+---
 
 ## 🎬 Demo
 
@@ -28,11 +52,10 @@
 
 *Left: The sleek, dark-themed floating indicator. Right: Transcription results in real-time.*
 
-***
-
-Welcome to **WhisperHook**! WhisperHook is a blazing-fast, cross-platform dictation tool that uses local machine learning models directly on your device. Just press a hotkey from **any** application on your computer, speak, and watch your words magically appear on screen. 🚀
+---
 
 ## ✨ Why WhisperHook?
+
 - **🔐 100% Local & Private:** Your voice never leaves your computer. Powered by `faster-whisper`, everything processes offline. 
 - **⚡ System-Wide Integration:** Works with your browser, Word, IDEs, or any other application.
 - **🎤 Zero-Friction Dictation:** 
@@ -41,7 +64,7 @@ Welcome to **WhisperHook**! WhisperHook is a blazing-fast, cross-platform dictat
 - **🎨 Unobtrusive Design:** Lives quietly in your system tray with a floating indicator.
 - **⚙️ Customizable:** Choose your Whisper model (tiny to medium), hardware (CPU/CUDA), and language.
 
-***
+---
 
 ## 🧠 The AI Engine
 
@@ -61,12 +84,16 @@ WhisperHook relies on two state-of-the-art AI models:
 
 ## 🛠️ Local Development Setup
 
+While we recommend using `.\setup.bat` for a one-click experience, here are the manual steps if you prefer:
+
 ### Prerequisites
+
 1. **Node.js** (v18+)
 2. **Rust & Cargo** (`rustup`)
 3. **Python** (3.10+)
 
 ### 1. Python Environment Setup
+
 The application uses a Python sidecar for transcription. Prepare the virtual environment:
 
 ```bash
@@ -83,17 +110,19 @@ pip install -r requirements.txt
 ```
 
 ### 2. Install Frontend Dependencies
+
 ```bash
 # In the project root
 npm install
 ```
 
 ### 3. Run Development Mode
+
 ```bash
 npm run tauri dev
 ```
 
-***
+---
 
 ## 📦 Generating the Installer
 
@@ -125,7 +154,8 @@ npm run tauri build
 ```
 The final installer will be located in `src-tauri/target/release/bundle/`.
 
-***
+---
 
 ## 📄 License
+
 This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
