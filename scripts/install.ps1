@@ -4,7 +4,7 @@ $ErrorActionPreference = "Stop"
 Write-Host "Fetching latest release of WhisperHook..." -ForegroundColor Cyan
 
 # Define the repo
-$repo = "arieldeibe/local-whisper"
+$repo = "aralde/whisperhook"
 
 # Get latest release from GitHub API
 try {
