@@ -2,7 +2,7 @@
 name = "whisper-hook"
 version = "0.1.0"
 description = "A Tauri App"
-authors = ["Ariel Deibe"]
+authors = ["Aralde <aralde.git@gmail.com>"]
 license = "MIT"
 edition = "2021"
 
