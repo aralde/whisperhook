@@ -5,7 +5,7 @@
 
   **System-wide, privacy-focused voice typing powered by local AI.**
 
-  [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+  [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg?style=flat-square)](https://opensource.org/licenses/Apache-2.0)
   ![Windows](https://img.shields.io/badge/Windows-0078D6?style=flat-square&logo=windows&logoColor=white)
   ![Local AI](https://img.shields.io/badge/100%25%20Local-Offline-green?style=flat-square&logo=gitpod&logoColor=white)
   ![Tauri](https://img.shields.io/badge/Built%20with-Tauri-FFC131?style=flat-square&logo=tauri&logoColor=white)
@@ -175,4 +175,4 @@ The final installer will be located in `src-tauri/target/release/bundle/`.
 
 ## 📄 License
 
-This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the **Apache License 2.0**. See the [LICENSE](LICENSE) and [NOTICE](NOTICE) files for details.
